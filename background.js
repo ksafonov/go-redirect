@@ -236,61 +236,6 @@ chrome.webNavigation.onBeforeNavigate.addListener((details) => {
   }
 });
 
-// Handle omnibox input for suggestions
-chrome.omnibox.onInputChanged.addListener((text, suggest) => {
-  chrome.storage.local.get(LINKS_CACHE_KEY, (result) => {
-    const links = result[LINKS_CACHE_KEY] || {};
-    const suggestions = [];
-
-    // Filter links that match the input
-    for (const [shortLink, targetUrl] of Object.entries(links)) {
-      if (shortLink.toLowerCase().includes(text.toLowerCase())) {
-        suggestions.push({
-          content: shortLink,
-          description: `${shortLink} → ${targetUrl}`
-        });
-      }
-    }
-
-    // Limit to top 6 suggestions
-    suggest(suggestions.slice(0, 6));
-  });
-});
-
-// Handle omnibox input when user presses Enter
-chrome.omnibox.onInputEntered.addListener((text, disposition) => {
-  chrome.storage.local.get(LINKS_CACHE_KEY, (result) => {
-    const links = result[LINKS_CACHE_KEY] || {};
-
-    // Find exact match or first partial match
-    let targetUrl = links[text];
-
-    if (!targetUrl) {
-      // Try to find a partial match
-      const matches = Object.entries(links).filter(([key]) =>
-        key.toLowerCase().includes(text.toLowerCase())
-      );
-
-      if (matches.length > 0) {
-        targetUrl = matches[0][1];
-      }
-    }
-
-    if (targetUrl) {
-      // Navigate based on disposition
-      if (disposition === 'currentTab') {
-        chrome.tabs.update({ url: targetUrl });
-      } else if (disposition === 'newForegroundTab') {
-        chrome.tabs.create({ url: targetUrl });
-      } else if (disposition === 'newBackgroundTab') {
-        chrome.tabs.create({ url: targetUrl, active: false });
-      }
-    } else {
-      console.warn(`No redirect found for: ${text}`);
-    }
-  });
-});
-
 // Listen for messages from popup and options
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'reloadConfig') {

@@ -6,10 +6,19 @@ const LAST_REMOTE_FETCH_KEY = 'lastRemoteFetch';
 
 let remoteConfig = {};
 let localOverrides = {};
+let hasUnsavedChanges = false;
 
 // Load data on page load
 document.addEventListener('DOMContentLoaded', () => {
   loadData();
+});
+
+// Warn before closing if there are unsaved changes
+window.addEventListener('beforeunload', (e) => {
+  if (hasUnsavedChanges) {
+    e.preventDefault();
+    e.returnValue = ''; // Chrome requires returnValue to be set
+  }
 });
 
 // Load all data
@@ -85,6 +94,9 @@ function createRow(shortcut, url) {
   shortcutInput.type = 'text';
   shortcutInput.value = shortcut;
   shortcutInput.dataset.originalShortcut = shortcut;
+  shortcutInput.addEventListener('input', () => {
+    hasUnsavedChanges = true;
+  });
   shortcutCell.appendChild(shortcutInput);
   row.appendChild(shortcutCell);
 
@@ -93,6 +105,9 @@ function createRow(shortcut, url) {
   const urlInput = document.createElement('input');
   urlInput.type = 'text';
   urlInput.value = url;
+  urlInput.addEventListener('input', () => {
+    hasUnsavedChanges = true;
+  });
   urlCell.appendChild(urlInput);
   row.appendChild(urlCell);
 
@@ -112,6 +127,7 @@ function createRow(shortcut, url) {
 function deleteRow(row) {
   if (confirm('Delete this mapping?')) {
     row.remove();
+    hasUnsavedChanges = true;
 
     // If table is empty, show empty state
     const tbody = document.getElementById('mappingsBody');
@@ -133,6 +149,7 @@ document.getElementById('addMapping').addEventListener('click', () => {
 
   const row = createRow('', '');
   tbody.appendChild(row);
+  hasUnsavedChanges = true;
 
   // Focus on the shortcut input
   row.querySelector('input').focus();
@@ -272,6 +289,7 @@ document.getElementById('save').addEventListener('click', async () => {
     // Reload in background
     chrome.runtime.sendMessage({ action: 'reloadConfig' });
 
+    hasUnsavedChanges = false;
     showStatus('Configuration saved successfully!', 'success', 'status');
 
     // Re-render to update source badges
@@ -320,9 +338,96 @@ document.getElementById('reset').addEventListener('click', async () => {
     // Reload in background
     chrome.runtime.sendMessage({ action: 'reloadConfig' });
 
+    hasUnsavedChanges = false;
     showStatus('Reset to default configuration', 'success', 'status');
   } catch (error) {
     showStatus('Failed to reset: ' + error.message, 'error', 'status');
+  }
+});
+
+// Export configuration to file
+document.getElementById('exportConfig').addEventListener('click', () => {
+  if (Object.keys(localOverrides).length === 0) {
+    showStatus('No local mappings to export', 'error', 'status');
+    return;
+  }
+
+  // Create JSON file with same format as remote config
+  const json = JSON.stringify(localOverrides, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  // Create download link
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'go-links-config.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showStatus(`Exported ${Object.keys(localOverrides).length} mappings to file`, 'success', 'status');
+});
+
+// Import configuration from file
+document.getElementById('importConfig').addEventListener('click', () => {
+  document.getElementById('fileInput').click();
+});
+
+document.getElementById('fileInput').addEventListener('change', async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const importedConfig = JSON.parse(text);
+
+    // Validate it's an object
+    if (typeof importedConfig !== 'object' || Array.isArray(importedConfig)) {
+      throw new Error('Config must be a JSON object');
+    }
+
+    // Validate all values are strings (URLs)
+    for (const [key, value] of Object.entries(importedConfig)) {
+      if (typeof value !== 'string') {
+        throw new Error(`Invalid value for "${key}": must be a URL string`);
+      }
+      try {
+        new URL(value);
+      } catch (e) {
+        throw new Error(`Invalid URL for "${key}": ${value}`);
+      }
+    }
+
+    // Check for overwrites
+    const existingKeys = Object.keys(localOverrides);
+    const importedKeys = Object.keys(importedConfig);
+    const overwriteKeys = importedKeys.filter(key => existingKeys.includes(key));
+
+    let confirmMessage = `Import ${importedKeys.length} mappings?`;
+    if (overwriteKeys.length > 0) {
+      confirmMessage = `Import ${importedKeys.length} mappings?\n\nWarning: ${overwriteKeys.length} existing ${overwriteKeys.length === 1 ? 'entry' : 'entries'} will be overwritten.`;
+    }
+
+    if (!confirm(confirmMessage)) {
+      // Reset file input
+      event.target.value = '';
+      return;
+    }
+
+    // Merge imported config with local overrides
+    localOverrides = { ...localOverrides, ...importedConfig };
+
+    // Re-render table
+    renderTable();
+
+    hasUnsavedChanges = true;
+    showStatus(`Imported ${importedKeys.length} mappings successfully. Click "Save Configuration" to apply.`, 'success', 'status');
+  } catch (error) {
+    showStatus('Failed to import: ' + error.message, 'error', 'status');
+  } finally {
+    // Reset file input
+    event.target.value = '';
   }
 });
 

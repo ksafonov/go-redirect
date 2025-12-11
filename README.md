@@ -16,8 +16,13 @@ A Chrome extension that enables short link redirects (like `go/foo`) to predefin
 1. Click the extension icon in your toolbar
 2. Click "Edit Configuration"
 3. **(Optional)** Configure a remote URL to fetch base mappings from a server. Useful for sharing configurations across a team.
-4. Manage your local shortcuts in the "Mappings Overrides" table
+4. Manage your local shortcuts in the "Mappings Overrides" table:
+   - Add new mappings with "+ Add Mapping"
+   - Export your local mappings to a JSON file with "Export to File"
+   - Import mappings from a JSON file with "Import from File" (warns if entries will be overwritten)
 5. Don't forget to click "Save Configuration" to apply changes
+
+![settings](settings.png)
 
 ## Remote Configuration (Optional)
 

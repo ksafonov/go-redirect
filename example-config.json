@@ -1,0 +1,9 @@
+{
+  "repo": "https://github.com/yourorg/yourrepo",
+  "foo": "https://www.example.com/foo",
+  "bar": "https://www.example.com/bar",
+  "docs": "https://docs.example.com",
+  "github": "https://github.com/yourorg",
+  "calendar": "https://calendar.google.com",
+  "meet": "https://meet.google.com/your-meeting-code"
+}

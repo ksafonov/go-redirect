@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Go Links Redirector",
+  "version": "1.0.0",
+  "description": "Redirects short links (go/foo) to predefined URLs using static configuration",
+  "permissions": [
+    "storage",
+    "tabs",
+    "webNavigation",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
+    "alarms"
+  ],
+  "host_permissions": [
+    "*://go/*",
+    "*://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "omnibox": {
+    "keyword": "golink"
+  },
+  "options_page": "options.html",
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

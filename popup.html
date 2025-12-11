@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Go Links Redirector</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      width: 300px;
+      padding: 15px;
+      margin: 0;
+    }
+    h2 {
+      font-size: 16px;
+      margin: 0 0 15px 0;
+    }
+    .status-item {
+      margin-bottom: 10px;
+    }
+    .label {
+      font-weight: 500;
+      font-size: 13px;
+      color: #666;
+    }
+    .value {
+      font-size: 14px;
+      color: #333;
+      margin-top: 3px;
+    }
+    button {
+      width: 100%;
+      background-color: #4285f4;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #3367d6;
+    }
+    .link {
+      color: #4285f4;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 13px;
+      margin-top: 10px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h2>Go Links Redirector</h2>
+
+  <div class="status-item">
+    <div class="label">Active Links:</div>
+    <div class="value" id="linksCount">Loading...</div>
+  </div>
+
+  <div class="status-item" id="linksList" style="margin-top: 10px; display: none;">
+    <div class="label">Available shortcuts:</div>
+    <div class="value" id="linksDisplay" style="font-size: 12px; color: #666; line-height: 1.6;"></div>
+  </div>
+
+  <button id="settings">Edit Configuration</button>
+  <button id="reload" style="display: none;">Reload Remote Config</button>
+
+  <div style="margin-top: 10px; font-size: 12px; color: #666;">
+    Click "Edit Configuration" to manage your shortcuts
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
